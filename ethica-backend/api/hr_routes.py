@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, g
-from database.db_manager import get_db
+from database.db_manager import get_db, get_db_cursor, get_placeholder
 from core.auth_middleware import token_required, role_required
 from datetime import datetime, date
 
@@ -11,30 +11,38 @@ hr_bp = Blueprint("hr", __name__)
 def get_hr_overview():
     try:
         conn = get_db()
-        db = conn.cursor()
+        db = get_db_cursor(conn)
+        p = get_placeholder()
         dept = g.current_user["department"]
         user_id = g.current_user["id"]
 
         # 1. Employees in department
-        db.execute("SELECT * FROM users WHERE department = ? AND role = 'employee'", (dept,))
+        db.execute(f"SELECT * FROM users WHERE department = {p} AND role = 'employee'", (dept,))
         employees = [dict(row) for row in db.fetchall()]
 
         # 2. Overdue Summary (tasks for employees in this dept)
-        # Using status != 'completed' and due_date < today
-        db.execute("""
+        # SQLite: date('now'), Postgres: CURRENT_DATE
+        now_sql = "CURRENT_DATE" if DATABASE_URL else "date('now')"
+        db.execute(f"""
             SELECT t.*, u.firstName, u.lastName 
             FROM tasks t
             JOIN users u ON t.assignee_user_id = u.id
-            WHERE u.department = ? AND (t.status = 'overdue' OR (t.status != 'completed' AND t.due_date <= date('now')))
+            WHERE u.department = {p} AND (t.status = 'overdue' OR (t.status != 'completed' AND t.due_date <= {now_sql}))
         """, (dept,))
         rows = db.fetchall()
         
         overdue_summary = []
         for row in rows:
             try:
-                due = datetime.strptime(row["due_date"], "%Y-%m-%d").date()
+                # Handle both string and date types if necessary, but string is safer for our app
+                due_val = row["due_date"]
+                if isinstance(due_val, str):
+                    due = datetime.strptime(due_val, "%Y-%m-%d").date()
+                else:
+                    due = due_val # Already a date/datetime object from Postgres
                 delay = (date.today() - due).days
-            except:
+            except Exception as e:
+                print("DELAY CALC ERROR:", str(e))
                 delay = 0
             
             overdue_summary.append({
@@ -42,15 +50,15 @@ def get_hr_overview():
                 "task": row["title"],
                 "delay": delay,
                 "status": row["status"],
-                "level": row["escalation_level"] if "escalation_level" in row.keys() else "Escalated",
+                "level": row["escalation_level"] if "escalation_level" in row else "Normal",
                 "problem": row["employee_report"] or ""
             })
 
         # 3. Notifications
-        db.execute("""
+        db.execute(f"""
             SELECT id, message, type, created_at 
             FROM notifications 
-            WHERE user_id = ? 
+            WHERE user_id = {p} 
             ORDER BY created_at DESC LIMIT 10
         """, (user_id,))
         notifications = [dict(row) for row in db.fetchall()]
@@ -70,8 +78,9 @@ def get_hr_overview():
 @role_required("hr")
 def get_hr_employees():
     conn = get_db()
-    db = conn.cursor()
-    db.execute("SELECT * FROM users WHERE department = ? AND role = 'employee'", (g.current_user["department"],))
+    db = get_db_cursor(conn)
+    p = get_placeholder()
+    db.execute(f"SELECT * FROM users WHERE department = {p} AND role = 'employee'", (g.current_user["department"],))
     employees = [dict(row) for row in db.fetchall()]
     conn.close()
     return jsonify({"employees": employees})
@@ -90,10 +99,11 @@ def create_hr_task():
         return jsonify({"message": "Missing required fields"}), 400
 
     conn = get_db()
-    db = conn.cursor()
+    db = get_db_cursor(conn)
+    p = get_placeholder()
     
     # Get assignee details
-    db.execute("SELECT firstName, lastName, role FROM users WHERE id = ?", (assignee_user_id,))
+    db.execute(f"SELECT firstName, lastName, role, department FROM users WHERE id = {p}", (assignee_user_id,))
     user = db.fetchone()
     if not user:
         conn.close()
@@ -107,11 +117,11 @@ def create_hr_task():
         conn.close()
         return jsonify({"message": "You can only assign tasks to employees in your department"}), 403
 
-    db.execute("""
+    db.execute(f"""
         INSERT INTO tasks (title, assignee_name, assignee_role, status, due_date, 
                           created_by_role, assignee_user_id, project_name, 
                           created_by_user_id, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ({p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p})
     """, (title, assignee_name, assignee_role, "pending", due_date, 
           "hr", assignee_user_id, project_name,
           g.current_user["id"], datetime.utcnow().isoformat()))

@@ -1,33 +1,28 @@
 import threading
 import time
-from datetime import datetime, date
-import sqlite3
-import os
-from database.db_manager import get_db
+from database.db_manager import get_db, get_db_cursor, get_placeholder
+from core.config import DATABASE_URL
 
 def _check_and_notify_deadlines(app_context=None):
-    # Depending on how the db is accessed, we establish a new local connection since sqlite connections
-    # cannot be shared across threads easily in this default configuration.
-    
-    # We resolve the db path from the environment or default
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    db_path = os.path.join(base_dir, "ethica.db")
+    # This service is usually disabled on Vercel, but we update it for local/Supabase consistency.
     
     while True:
         try:
-            conn = sqlite3.connect(db_path)
-            conn.row_factory = sqlite3.Row
-            db = conn.cursor()
+            conn = get_db()
+            db = get_db_cursor(conn)
+            p = get_placeholder()
             
-            # Find tasks that are actively overdue but still marked as Normal escalation
-            # t.status != 'completed' AND t.status != 'overdue' AND t.due_date < date('now')
-            db.execute("""
+            # Find tasks that are actively overdue 
+            # SQLite: date('now'), Postgres: CURRENT_DATE
+            now_sql = "CURRENT_DATE" if DATABASE_URL else "date('now')"
+            
+            db.execute(f"""
                 SELECT t.id, t.title, t.due_date, u.department, u.firstName, u.lastName
                 FROM tasks t
                 JOIN users u ON t.assignee_user_id = u.id
                 WHERE t.status != 'completed' 
                   AND t.status != 'overdue'
-                  AND t.due_date < date('now', 'localtime')
+                  AND t.due_date < {now_sql}
             """)
             overdue_tasks = db.fetchall()
             
@@ -38,14 +33,14 @@ def _check_and_notify_deadlines(app_context=None):
                 emp_name = f"{task['firstName']} {task['lastName']}"
                 
                 # 1. Update task properly to overdue
-                db.execute("""
+                db.execute(f"""
                     UPDATE tasks 
-                    SET status = 'overdue', escalation_level = 'Escalated', updated_at = ? 
-                    WHERE id = ?
+                    SET status = 'overdue', escalation_level = 'Escalated', updated_at = {p} 
+                    WHERE id = {p}
                 """, (datetime.utcnow().isoformat(), task_id))
                 
                 # 2. Get HR for this department
-                db.execute("SELECT id FROM users WHERE role = 'hr' AND department = ?", (dept,))
+                db.execute(f"SELECT id FROM users WHERE role = 'hr' AND department = {p}", (dept,))
                 hr_users = db.fetchall()
                 
                 # 3. Get Manager and Admin
@@ -54,17 +49,16 @@ def _check_and_notify_deadlines(app_context=None):
                 
                 message = f"Deadline Missed: Task '{title}' by {emp_name} ({dept}) is overdue."
                 
-                # Insert notifications
                 for hr in hr_users:
-                    db.execute("""
+                    db.execute(f"""
                         INSERT INTO notifications (user_id, message, type, created_at)
-                        VALUES (?, ?, 'escalation', ?)
+                        VALUES ({p}, {p}, 'escalation', {p})
                     """, (hr["id"], message, datetime.utcnow().isoformat()))
                     
                 for rec in notif_recipients:
-                    db.execute("""
+                    db.execute(f"""
                         INSERT INTO notifications (user_id, message, type, created_at)
-                        VALUES (?, ?, 'escalation', ?)
+                        VALUES ({p}, {p}, 'escalation', {p})
                     """, (rec["id"], message, datetime.utcnow().isoformat()))
                     
             conn.commit()

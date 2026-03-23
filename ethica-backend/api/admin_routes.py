@@ -1,6 +1,8 @@
 from flask import Blueprint, jsonify
-from database.db_manager import get_db
+from database.db_manager import get_db, get_db_cursor, get_placeholder
+from core.config import DATABASE_URL
 from core.auth_middleware import token_required, role_required
+from datetime import datetime, date
 
 admin_bp = Blueprint("admin_stats", __name__)
 
@@ -10,7 +12,7 @@ admin_bp = Blueprint("admin_stats", __name__)
 def get_team_stats():
     try:
         conn = get_db()
-        db = conn.cursor()
+        db = get_db_cursor(conn)
         
         # Join tasks with users to get departments
         # We group by the department of the assignee
@@ -51,18 +53,19 @@ def get_team_stats():
 def get_overview_stats():
     try:
         conn = get_db()
-        db = conn.cursor()
+        db = get_db_cursor(conn)
+        p = get_placeholder()
         
         # 1. Metrics
         db.execute("SELECT COUNT(*) as total FROM users")
         total_users = db.fetchone()["total"]
-        db.execute("SELECT COUNT(*) as total FROM users WHERE role = 'employee'")
+        db.execute(f"SELECT COUNT(*) as total FROM users WHERE role = {p}", ("employee",))
         total_employees = db.fetchone()["total"]
-        db.execute("SELECT COUNT(*) as total FROM users WHERE role = 'hr'")
+        db.execute(f"SELECT COUNT(*) as total FROM users WHERE role = {p}", ("hr",))
         total_hr = db.fetchone()["total"]
-        db.execute("SELECT COUNT(*) as total FROM users WHERE role = 'manager'")
+        db.execute(f"SELECT COUNT(*) as total FROM users WHERE role = {p}", ("manager",))
         total_managers = db.fetchone()["total"]
-        db.execute("SELECT COUNT(*) as total FROM tasks WHERE status = 'overdue'")
+        db.execute(f"SELECT COUNT(*) as total FROM tasks WHERE status = {p}", ("overdue",))
         total_overdue = db.fetchone()["total"]
         
         metrics = {
@@ -74,18 +77,23 @@ def get_overview_stats():
         }
 
         # 2. Overdue Summary
-        db.execute("""
+        # SQLite: date('now'), Postgres: CURRENT_DATE
+        now_sql = "CURRENT_DATE" if DATABASE_URL else "date('now')"
+        db.execute(f"""
             SELECT assignee_name as owner, title as task, due_date, status
             FROM tasks
-            WHERE status = 'overdue' OR (status != 'completed' AND due_date < date('now'))
+            WHERE status = 'overdue' OR (status != 'completed' AND due_date < {now_sql})
             ORDER BY due_date ASC LIMIT 10
         """)
         rows = db.fetchall()
-        from datetime import datetime, date
         overdue_summary = []
         for row in rows:
             try:
-                due = datetime.strptime(row["due_date"], "%Y-%m-%d").date()
+                due_val = row["due_date"]
+                if isinstance(due_val, str):
+                    due = datetime.strptime(due_val, "%Y-%m-%d").date()
+                else:
+                    due = due_val # Already date/datetime from Postgres
                 delay = (date.today() - due).days
             except:
                 delay = 0

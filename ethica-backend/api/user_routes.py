@@ -3,7 +3,7 @@ from werkzeug.security import generate_password_hash
 import jwt
 from datetime import datetime, timedelta
 from core.config import SECRET_KEY, VALID_ROLES
-from database.db_manager import get_db, get_tokens_db
+from database.db_manager import get_db, get_tokens_db, get_db_cursor, get_placeholder
 from core.auth_middleware import token_required, role_required, serialize_user
 from services.token_service import save_token
 
@@ -14,11 +14,12 @@ user_bp = Blueprint("users", __name__)
 @role_required("admin", "hr", "manager")
 def list_users():
     conn = get_db()
-    db = conn.cursor()
+    db = get_db_cursor(conn)
+    p = get_placeholder()
     
     role = g.current_user["role"]
     if role == "hr":
-        db.execute("SELECT * FROM users WHERE role = 'employee' AND department = ?", (g.current_user["department"],))
+        db.execute(f"SELECT * FROM users WHERE role = 'employee' AND department = {p}", (g.current_user["department"],))
     elif role == "manager":
         db.execute("SELECT * FROM users WHERE role IN ('employee', 'hr')")
     else:
@@ -44,10 +45,11 @@ def create_user():
         return jsonify({"message": "Missing fields"}), 400
 
     conn = get_db()
-    db = conn.cursor()
-    db.execute("""
+    db = get_db_cursor(conn)
+    p = get_placeholder()
+    db.execute(f"""
         INSERT INTO users (firstName, lastName, email, password, role, department)
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES ({p}, {p}, {p}, {p}, {p}, {p})
     """, (first_name, last_name, email, generate_password_hash(password), role, department))
     conn.commit()
     conn.close()
@@ -59,9 +61,10 @@ def create_user():
 def update_user(user_id):
     data = request.get_json() or {}
     conn = get_db()
-    db = conn.cursor()
+    db = get_db_cursor(conn)
+    p = get_placeholder()
     
-    db.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    db.execute(f"SELECT * FROM users WHERE id = {p}", (user_id,))
     user = db.fetchone()
     if not user:
         conn.close()
@@ -78,7 +81,7 @@ def update_user(user_id):
         print(f"SECURITY: Admin {g.current_user['id']} (Email: {g.current_user['email']}) changed password for user {user_id} ({original_role})")
         
         new_hashed = generate_password_hash(password)
-        db.execute("UPDATE users SET password = ? WHERE id = ?", (new_hashed, user_id))
+        db.execute(f"UPDATE users SET password = {p} WHERE id = {p}", (new_hashed, user_id))
         
         # Invalidate/Update session for the target user
         # Fetch latest state (in case role changed too)
@@ -99,9 +102,9 @@ def update_user(user_id):
     role = data.get("role", user["role"])
     department = data.get("department", user["department"])
 
-    db.execute("""
-        UPDATE users SET firstName=?, lastName=?, email=?, role=?, department=?
-        WHERE id=?
+    db.execute(f"""
+        UPDATE users SET firstName={p}, lastName={p}, email={p}, role={p}, department={p}
+        WHERE id={p}
     """, (firstName, lastName, email, role, department, user_id))
     
     conn.commit()
@@ -113,27 +116,28 @@ def update_user(user_id):
 @role_required("admin")
 def delete_user(user_id):
     conn = get_db()
-    db = conn.cursor()
+    db = get_db_cursor(conn)
+    p = get_placeholder()
     
-    db.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    db.execute(f"SELECT * FROM users WHERE id = {p}", (user_id,))
     user = db.fetchone()
     if not user:
         conn.close()
         return jsonify({"message": "User not found"}), 404
 
     # Delete notifications first (FK constraint)
-    db.execute("DELETE FROM notifications WHERE user_id = ?", (user_id,))
+    db.execute(f"DELETE FROM notifications WHERE user_id = {p}", (user_id,))
     
     # Delete the user
-    db.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    db.execute(f"DELETE FROM users WHERE id = {p}", (user_id,))
     
     conn.commit()
     conn.close()
     
     # Also clean up tokens in the other database
     tokens_conn = get_tokens_db()
-    tdb = tokens_conn.cursor()
-    tdb.execute("DELETE FROM tokens WHERE user_id = ?", (user_id,))
+    tdb = get_db_cursor(tokens_conn)
+    tdb.execute(f"DELETE FROM tokens WHERE user_id = {p}", (user_id,))
     tokens_conn.commit()
     tokens_conn.close()
     

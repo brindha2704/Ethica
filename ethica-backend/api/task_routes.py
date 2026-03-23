@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify, g
 from datetime import datetime
-from database.db_manager import get_db
+from database.db_manager import get_db, get_db_cursor, get_placeholder
 from core.auth_middleware import token_required, role_required
 
 task_bp = Blueprint("tasks", __name__)
@@ -18,15 +18,15 @@ def list_tasks():
     elif role == "hr":
         # HR only sees tasks for employees in their department
         dept = g.current_user["department"]
-        db.execute("""
+        db.execute(f"""
             SELECT t.* FROM tasks t
             JOIN users u ON t.assignee_user_id = u.id
-            WHERE u.department = ?
+            WHERE u.department = {p}
         """, (dept,))
     elif role == "manager":
-        db.execute("SELECT * FROM tasks WHERE created_by_user_id = ? OR assignee_user_id = ?", (user_id, user_id))
+        db.execute(f"SELECT * FROM tasks WHERE created_by_user_id = {p} OR assignee_user_id = {p}", (user_id, user_id))
     else:
-        db.execute("SELECT * FROM tasks WHERE assignee_user_id = ?", (user_id,))
+        db.execute(f"SELECT * FROM tasks WHERE assignee_user_id = {p}", (user_id,))
     
     tasks = []
     for row in db.fetchall():
@@ -52,7 +52,7 @@ def create_task():
     db = conn.cursor()
     
     # Get assignee details
-    db.execute("SELECT firstName, lastName, role FROM users WHERE id = ?", (assignee_user_id,))
+    db.execute(f"SELECT firstName, lastName, role FROM users WHERE id = {p}", (assignee_user_id,))
     user = db.fetchone()
     if not user:
         conn.close()
@@ -67,11 +67,11 @@ def create_task():
         conn.close()
         return jsonify({"message": f"HR can only assign tasks to employees in the {g.current_user['department']} department"}), 403
 
-    db.execute("""
+    db.execute(f"""
         INSERT INTO tasks (title, assignee_name, assignee_role, status, due_date, 
                           created_by_role, assignee_user_id, project_name, client_name, 
                           created_by_user_id, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES ({p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p}, {p})
     """, (title, assignee_name, assignee_role, "in_progress", due_date, 
           g.current_user["role"], assignee_user_id, project_name, client_name,
           g.current_user["id"], datetime.utcnow().isoformat()))
@@ -87,8 +87,9 @@ def update_task_status(task_id):
     status = data.get("status")
     
     conn = get_db()
-    db = conn.cursor()
-    db.execute("UPDATE tasks SET status = ?, updated_at = ? WHERE id = ?", 
+    db = get_db_cursor(conn)
+    p = get_placeholder()
+    db.execute(f"UPDATE tasks SET status = {p}, updated_at = {p} WHERE id = {p}", 
                (status, datetime.utcnow().isoformat(), task_id))
     conn.commit()
     conn.close()

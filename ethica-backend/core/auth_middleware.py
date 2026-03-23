@@ -34,9 +34,11 @@ def token_required(fn):
             payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
             user_id = payload.get("id")
             
+            from database.db_manager import get_db, get_db_cursor, get_placeholder
             conn = get_db()
-            db = conn.cursor()
-            db.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+            db = get_db_cursor(conn)
+            p = get_placeholder()
+            db.execute(f"SELECT * FROM users WHERE id = {p}", (user_id,))
             user = db.fetchone()
             conn.close()
 

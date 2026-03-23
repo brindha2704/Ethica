@@ -3,7 +3,7 @@ import jwt
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
 from core.config import SECRET_KEY
-from database.db_manager import get_db
+from database.db_manager import get_db, get_db_cursor, get_placeholder
 from core.auth_middleware import serialize_user, token_required, role_required
 from services.token_service import save_token, list_all_tokens
 
@@ -23,19 +23,29 @@ def register():
             return jsonify({"message": "All fields are required"}), 400
 
         conn = get_db()
-        db = conn.cursor()
+        db = get_db_cursor(conn)
         
-        db.execute("SELECT * FROM users WHERE email = ?", (email,))
+        p = get_placeholder()
+        db.execute(f"SELECT * FROM users WHERE email = {p}", (email,))
         if db.fetchone():
             conn.close()
             return jsonify({"message": "Email already exists"}), 400
 
         hashed_password = generate_password_hash(password)
-        db.execute("""
+        db.execute(f"""
             INSERT INTO users (firstName, lastName, email, password, role)
-            VALUES (?, ?, ?, ?, ?)
+            VALUES ({p}, {p}, {p}, {p}, {p})
         """, (first_name, last_name, email, hashed_password, role))
-        user_id = db.lastrowid
+        
+        # In Postgres lastrowid doesn't always work same, but we can query by email if needed
+        # Or if SERIAL is used, inserting might need RETURNING id if using psycopg2 directly
+        # But let's try to be generic. 
+        if hasattr(db, "lastrowid") and db.lastrowid:
+            user_id = db.lastrowid
+        else:
+            db.execute(f"SELECT id FROM users WHERE email = {p}", (email,))
+            user_id = db.fetchone()["id"]
+        
         conn.commit()
         
         # Capture token for new registration
@@ -62,12 +72,13 @@ def login():
         password = data.get("password")
 
         conn = get_db()
-        db = conn.cursor()
+        db = get_db_cursor(conn)
+        p = get_placeholder()
         
         if email:
-            db.execute("SELECT * FROM users WHERE email = ?", (email,))
+            db.execute(f"SELECT * FROM users WHERE email = {p}", (email,))
         else:
-            db.execute("SELECT * FROM users WHERE firstName = ?", (first_name,))
+            db.execute(f"SELECT * FROM users WHERE firstName = {p}", (first_name,))
         
         user = db.fetchone()
         if not user or not check_password_hash(user["password"], password):
@@ -104,11 +115,12 @@ def list_tokens():
     tokens = list_all_tokens()
     # Join with user info for better display
     conn = get_db()
-    db = conn.cursor()
+    db = get_db_cursor(conn)
+    p = get_placeholder()
     
     enriched_tokens = []
     for t in tokens:
-        db.execute("SELECT firstName, lastName, email, role FROM users WHERE id = ?", (t["user_id"],))
+        db.execute(f"SELECT firstName, lastName, email, role FROM users WHERE id = {p}", (t["user_id"],))
         u = db.fetchone()
         if u:
             t["user"] = dict(u)

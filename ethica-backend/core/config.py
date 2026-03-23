@@ -6,11 +6,11 @@ load_dotenv()
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# Vercel filesystem is read-only, use /tmp for SQLite if on Vercel
-if os.getenv("VERCEL"):
-    DB_NAME = "/tmp/ethica.db"
-    TOKENS_DB_NAME = "/tmp/tokens.db"
-else:
+# Database configuration
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# Fallback for local dev if DATABASE_URL is not set
+if not DATABASE_URL:
     DB_NAME = os.path.join(BASE_DIR, "ethica.db")
     TOKENS_DB_NAME = os.path.join(BASE_DIR, "tokens.db")
 

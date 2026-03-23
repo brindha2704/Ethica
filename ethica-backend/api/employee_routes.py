@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, g
-from database.db_manager import get_db
+from database.db_manager import get_db, get_db_cursor, get_placeholder
 from core.auth_middleware import token_required
 from datetime import datetime, date
 
@@ -10,22 +10,28 @@ employee_bp = Blueprint("employee", __name__)
 def get_employee_overview():
     try:
         conn = get_db()
-        db = conn.cursor()
+        db = get_db_cursor(conn)
+        p = get_placeholder()
         user_id = g.current_user["id"]
         dept = g.current_user["department"]
 
         # 1. Task Metrics
-        db.execute("SELECT COUNT(*) as total FROM tasks WHERE assignee_user_id = ?", (user_id,))
-        total = db.fetchone()["total"]
+        db.execute(f"SELECT COUNT(*) as total FROM tasks WHERE assignee_user_id = {p}", (user_id,))
+        total_row = db.fetchone()
+        total = total_row["total"] if total_row else 0
 
-        db.execute("SELECT COUNT(*) as completed FROM tasks WHERE assignee_user_id = ? AND status = 'completed'", (user_id,))
-        completed = db.fetchone()["completed"]
+        db.execute(f"SELECT COUNT(*) as completed FROM tasks WHERE assignee_user_id = {p} AND status = 'completed'", (user_id,))
+        comp_row = db.fetchone()
+        completed = comp_row["completed"] if comp_row else 0
 
-        db.execute("""
+        # SQLite: date('now'), Postgres: CURRENT_DATE
+        now_sql = "CURRENT_DATE" if DATABASE_URL else "date('now')"
+        db.execute(f"""
             SELECT COUNT(*) as overdue FROM tasks 
-            WHERE assignee_user_id = ? AND (status = 'overdue' OR (status != 'completed' AND due_date <= date('now')))
+            WHERE assignee_user_id = {p} AND (status = 'overdue' OR (status != 'completed' AND due_date <= {now_sql}))
         """, (user_id,))
-        overdue = db.fetchone()["overdue"]
+        overdue_row = db.fetchone()
+        overdue = overdue_row["overdue"] if overdue_row else 0
 
         pending = total - completed - overdue
         if pending < 0: pending = 0
@@ -38,7 +44,7 @@ def get_employee_overview():
         }
 
         # 2. Tasks List
-        db.execute("SELECT * FROM tasks WHERE assignee_user_id = ? ORDER BY due_date ASC", (user_id,))
+        db.execute(f"SELECT * FROM tasks WHERE assignee_user_id = {p} ORDER BY due_date ASC", (user_id,))
         rows = db.fetchall()
         tasks = []
         for row in rows:
@@ -47,7 +53,7 @@ def get_employee_overview():
             tasks.append(t)
 
         # 3. Assigned HR
-        db.execute("SELECT firstName, lastName, department FROM users WHERE role = 'hr' AND department = ? LIMIT 1", (dept,))
+        db.execute(f"SELECT firstName, lastName, department FROM users WHERE role = 'hr' AND department = {p} LIMIT 1", (dept,))
         hr_row = db.fetchone()
         assigned_hr = None
         if hr_row:
@@ -57,10 +63,10 @@ def get_employee_overview():
             }
 
         # 4. Notifications
-        db.execute("""
+        db.execute(f"""
             SELECT id, message, type, created_at as date 
             FROM notifications 
-            WHERE user_id = ? 
+            WHERE user_id = {p} 
             ORDER BY created_at DESC LIMIT 10
         """, (user_id,))
         notifications = [dict(row) for row in db.fetchall()]
@@ -85,19 +91,20 @@ def update_own_task_status(task_id):
 
     try:
         conn = get_db()
-        db = conn.cursor()
+        db = get_db_cursor(conn)
+        p = get_placeholder()
         
         # Verify ownership
-        db.execute("SELECT * FROM tasks WHERE id = ? AND assignee_user_id = ?", (task_id, user_id))
+        db.execute(f"SELECT * FROM tasks WHERE id = {p} AND assignee_user_id = {p}", (task_id, user_id))
         if not db.fetchone():
             conn.close()
             return jsonify({"message": "Task not found or access denied"}), 404
 
         completed_at = datetime.utcnow().isoformat() if status == "completed" else None
         
-        db.execute("""
-            UPDATE tasks SET status = ?, updated_at = ?, completed_at = ?
-            WHERE id = ?
+        db.execute(f"""
+            UPDATE tasks SET status = {p}, updated_at = {p}, completed_at = {p}
+            WHERE id = {p}
         """, (status, datetime.utcnow().isoformat(), completed_at, task_id))
         
         conn.commit()
@@ -115,17 +122,18 @@ def report_task_problem(task_id):
 
     try:
         conn = get_db()
-        db = conn.cursor()
+        db = get_db_cursor(conn)
+        p = get_placeholder()
         
         # Verify ownership
-        db.execute("SELECT * FROM tasks WHERE id = ? AND assignee_user_id = ?", (task_id, user_id))
+        db.execute(f"SELECT * FROM tasks WHERE id = {p} AND assignee_user_id = {p}", (task_id, user_id))
         if not db.fetchone():
             conn.close()
             return jsonify({"message": "Task not found or access denied"}), 404
 
-        db.execute("""
-            UPDATE tasks SET employee_report = ?, updated_at = ?
-            WHERE id = ?
+        db.execute(f"""
+            UPDATE tasks SET employee_report = {p}, updated_at = {p}
+            WHERE id = {p}
         """, (problem, datetime.utcnow().isoformat(), task_id))
         
         conn.commit()

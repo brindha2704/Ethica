@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify, g
-from database.db_manager import get_db
+from database.db_manager import get_db, get_db_cursor, get_placeholder
 from core.auth_middleware import token_required, role_required
 from datetime import datetime, date
 
@@ -11,7 +11,8 @@ manager_bp = Blueprint("manager", __name__)
 def get_manager_overview():
     try:
         conn = get_db()
-        db = conn.cursor()
+        db = get_db_cursor(conn)
+        p = get_placeholder()
         dept = g.current_user["department"]
         user_id = g.current_user["id"]
         
@@ -19,9 +20,9 @@ def get_manager_overview():
         
         # 1. Metrics
         if is_general:
-            db.execute("SELECT COUNT(*) as total FROM users WHERE role = 'employee'")
+            db.execute(f"SELECT COUNT(*) as total FROM users WHERE role = {p}", ("employee",))
         else:
-            db.execute("SELECT COUNT(*) as total FROM users WHERE department = ? AND role = 'employee'", (dept,))
+            db.execute(f"SELECT COUNT(*) as total FROM users WHERE department = {p} AND role = {p}", (dept, "employee"))
         total_employees = db.fetchone()["total"]
         
         if is_general:
@@ -31,39 +32,42 @@ def get_manager_overview():
                 WHERE t.status = 'completed'
             """)
         else:
-            db.execute("""
+            db.execute(f"""
                 SELECT COUNT(*) as total FROM tasks t
                 JOIN users u ON t.assignee_user_id = u.id
-                WHERE u.department = ? AND t.status = 'completed'
+                WHERE u.department = {p} AND t.status = 'completed'
             """, (dept,))
         completed_tasks = db.fetchone()["total"]
         
+        # SQLite: date('now'), Postgres: CURRENT_DATE
+        now_sql = "CURRENT_DATE" if DATABASE_URL else "date('now')"
+        
         if is_general:
-            db.execute("""
+            db.execute(f"""
                 SELECT COUNT(*) as total FROM tasks t
                 JOIN users u ON t.assignee_user_id = u.id
-                WHERE t.status = 'overdue' OR (t.status != 'completed' AND t.due_date <= date('now'))
+                WHERE t.status = 'overdue' OR (t.status != 'completed' AND t.due_date <= {now_sql})
             """)
         else:
-            db.execute("""
+            db.execute(f"""
                 SELECT COUNT(*) as total FROM tasks t
                 JOIN users u ON t.assignee_user_id = u.id
-                WHERE u.department = ? AND (t.status = 'overdue' OR (t.status != 'completed' AND t.due_date <= date('now')))
+                WHERE u.department = {p} AND (t.status = 'overdue' OR (t.status != 'completed' AND t.due_date <= {now_sql}))
             """, (dept,))
         overdue_tasks = db.fetchone()["total"]
         
         if is_general:
-            db.execute("""
+            db.execute(f"""
                 SELECT COUNT(*) as total FROM tasks t
                 JOIN users u ON t.assignee_user_id = u.id
-                WHERE t.status = 'in_progress'
-            """)
+                WHERE t.status = {p}
+            """, ("in_progress",))
         else:
-            db.execute("""
+            db.execute(f"""
                 SELECT COUNT(*) as total FROM tasks t
                 JOIN users u ON t.assignee_user_id = u.id
-                WHERE u.department = ? AND t.status = 'in_progress'
-            """, (dept,))
+                WHERE u.department = {p} AND t.status = {p}
+            """, (dept, "in_progress"))
         in_progress_tasks = db.fetchone()["total"]
 
         total_tasks = completed_tasks + overdue_tasks + in_progress_tasks
@@ -79,19 +83,19 @@ def get_manager_overview():
 
         # 2. Overdue Summary
         if is_general:
-            db.execute("""
+            db.execute(f"""
                 SELECT t.*, u.firstName, u.lastName 
                 FROM tasks t
                 JOIN users u ON t.assignee_user_id = u.id
-                WHERE (t.status = 'overdue' OR (t.status != 'completed' AND t.due_date <= date('now')))
+                WHERE (t.status = 'overdue' OR (t.status != 'completed' AND t.due_date <= {now_sql}))
                 ORDER BY t.due_date ASC LIMIT 5
             """)
         else:
-            db.execute("""
+            db.execute(f"""
                 SELECT t.*, u.firstName, u.lastName 
                 FROM tasks t
                 JOIN users u ON t.assignee_user_id = u.id
-                WHERE u.department = ? AND (t.status = 'overdue' OR (t.status != 'completed' AND t.due_date <= date('now')))
+                WHERE u.department = {p} AND (t.status = 'overdue' OR (t.status != 'completed' AND t.due_date <= {now_sql}))
                 ORDER BY t.due_date ASC LIMIT 5
             """, (dept,))
         rows = db.fetchall()
@@ -99,7 +103,11 @@ def get_manager_overview():
         overdue_summary = []
         for row in rows:
             try:
-                due = datetime.strptime(row["due_date"], "%Y-%m-%d").date()
+                due_val = row["due_date"]
+                if isinstance(due_val, str):
+                    due = datetime.strptime(due_val, "%Y-%m-%d").date()
+                else:
+                    due = due_val # Already date/datetime from Postgres
                 delay = (date.today() - due).days
             except:
                 delay = 0
@@ -108,7 +116,7 @@ def get_manager_overview():
                 "owner": f"{row['firstName']} {row['lastName']}",
                 "task": row["title"],
                 "delay": delay,
-                "level": row["escalation_level"] if "escalation_level" in row.keys() else "Escalated",
+                "level": row["escalation_level"] if "escalation_level" in row else "Normal",
                 "problem": row["employee_report"] or ""
             })
 
@@ -119,10 +127,10 @@ def get_manager_overview():
         }
 
         # 4. Notifications
-        db.execute("""
+        db.execute(f"""
             SELECT id, message, type, created_at 
             FROM notifications 
-            WHERE user_id = ? 
+            WHERE user_id = {p} 
             ORDER BY created_at DESC LIMIT 10
         """, (user_id,))
         notifications = [dict(row) for row in db.fetchall()]
@@ -143,22 +151,26 @@ def get_manager_overview():
 @role_required("manager")
 def get_manager_employees():
     conn = get_db()
-    db = conn.cursor()
+    db = get_db_cursor(conn)
+    p = get_placeholder()
     dept = g.current_user["department"]
     is_general = dept in ["Management", "General"]
     
     if is_general:
-        db.execute("SELECT * FROM users WHERE role = 'employee'")
+        db.execute(f"SELECT * FROM users WHERE role = {p}", ("employee",))
     else:
-        db.execute("SELECT * FROM users WHERE department = ? AND role = 'employee'", (dept,))
+        db.execute(f"SELECT * FROM users WHERE department = {p} AND role = {p}", (dept, "employee"))
     users = db.fetchall()
+    
+    # SQLite: date('now'), Postgres: CURRENT_DATE
+    now_sql = "CURRENT_DATE" if DATABASE_URL else "date('now')"
     
     employees = []
     for u in users:
         # Check if they have overdue tasks
-        db.execute("""
+        db.execute(f"""
             SELECT COUNT(*) as total FROM tasks 
-            WHERE assignee_user_id = ? AND (status = 'overdue' OR (status != 'completed' AND due_date <= date('now')))
+            WHERE assignee_user_id = {p} AND (status = 'overdue' OR (status != 'completed' AND due_date <= {now_sql}))
         """, (u["id"],))
         has_delays = db.fetchone()["total"] > 0
         
@@ -178,7 +190,8 @@ def get_manager_employees():
 @role_required("manager")
 def get_manager_tasks():
     conn = get_db()
-    db = conn.cursor()
+    db = get_db_cursor(conn)
+    p = get_placeholder()
     dept = g.current_user["department"]
     is_general = dept in ["Management", "General"]
     
@@ -189,11 +202,11 @@ def get_manager_tasks():
             JOIN users u ON t.assignee_user_id = u.id
         """)
     else:
-        db.execute("""
+        db.execute(f"""
             SELECT t.*, u.firstName, u.lastName 
             FROM tasks t
             JOIN users u ON t.assignee_user_id = u.id
-            WHERE u.department = ?
+            WHERE u.department = {p}
         """, (dept,))
     rows = db.fetchall()
     
@@ -205,7 +218,7 @@ def get_manager_tasks():
             "assignee": f"{row['firstName']} {row['lastName']}",
             "status": row["status"],
             "dueDate": row["due_date"],
-            "level": row["escalation_level"] if "escalation_level" in row.keys() else "Normal",
+            "level": row["escalation_level"] if "escalation_level" in row else "Normal",
             "employeeReport": row["employee_report"] or row.get("problem") or ""
         })
     
@@ -217,36 +230,39 @@ def get_manager_tasks():
 @role_required("manager")
 def get_manager_reports():
     conn = get_db()
-    db = conn.cursor()
+    db = get_db_cursor(conn)
+    p = get_placeholder()
     dept = g.current_user["department"]
     is_general = dept in ["Management", "General"]
     
     if is_general:
-        db.execute("""
+        db.execute(f"""
             SELECT t.*, u.firstName, u.lastName 
             FROM tasks t
             JOIN users u ON t.assignee_user_id = u.id
-            WHERE t.status = 'completed'
+            WHERE t.status = {p}
             ORDER BY t.updated_at DESC LIMIT 20
-        """)
+        """, ("completed",))
     else:
-        db.execute("""
+        db.execute(f"""
             SELECT t.*, u.firstName, u.lastName 
             FROM tasks t
             JOIN users u ON t.assignee_user_id = u.id
-            WHERE u.department = ? AND t.status = 'completed'
+            WHERE u.department = {p} AND t.status = {p}
             ORDER BY t.updated_at DESC LIMIT 20
-        """, (dept,))
+        """, (dept, "completed"))
     rows = db.fetchall()
     
     completed = []
     for row in rows:
-        completed_date = row["completed_at"] if "completed_at" in row.keys() and row["completed_at"] else row["updated_at"]
+        completed_date = row["completed_at"] if "completed_at" in row and row["completed_at"] else row["updated_at"]
         if not completed_date:
             completed_date = row["due_date"]
             
-        if completed_date and "T" in completed_date:
+        if completed_date and isinstance(completed_date, str) and "T" in completed_date:
             completed_date = completed_date.split("T")[0]
+        elif completed_date and not isinstance(completed_date, str):
+            completed_date = completed_date.strftime("%Y-%m-%d")
             
         completed.append({
             "assignee": f"{row['firstName']} {row['lastName']}",
