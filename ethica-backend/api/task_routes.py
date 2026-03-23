@@ -9,7 +9,8 @@ task_bp = Blueprint("tasks", __name__)
 @token_required
 def list_tasks():
     conn = get_db()
-    db = conn.cursor()
+    db = get_db_cursor(conn)
+    p = get_placeholder()
     role = g.current_user["role"]
     user_id = g.current_user["id"]
 
@@ -28,10 +29,11 @@ def list_tasks():
     else:
         db.execute(f"SELECT * FROM tasks WHERE assignee_user_id = {p}", (user_id,))
     
+    rows = db.fetchall()
     tasks = []
-    for row in db.fetchall():
+    for row in rows:
         d = dict(row)
-        d["employeeReport"] = row["employee_report"]
+        d["employeeReport"] = row.get("employee_report")
         tasks.append(d)
         
     conn.close()
@@ -49,10 +51,11 @@ def create_task():
     client_name = data.get("clientName")
 
     conn = get_db()
-    db = conn.cursor()
+    db = get_db_cursor(conn)
+    p = get_placeholder()
     
     # Get assignee details
-    db.execute(f"SELECT firstName, lastName, role FROM users WHERE id = {p}", (assignee_user_id,))
+    db.execute(f"SELECT firstName, lastName, role, department FROM users WHERE id = {p}", (assignee_user_id,))
     user = db.fetchone()
     if not user:
         conn.close()
