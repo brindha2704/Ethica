@@ -1,0 +1,36 @@
+export function renderUsers() {
+  const app = document.getElementById("app");
+  const token = sessionStorage.getItem("token") || localStorage.getItem("token");
+
+  app.innerHTML = `
+    <div class="layout">
+      <aside class="sidebar">
+        <h3>Ethica</h3>
+        <button onclick="navigate('#dashboard')">Dashboard</button>
+        <button onclick="logout()">Logout</button>
+      </aside>
+
+      <main class="content">
+        <h2>User Management</h2>
+        <ul id="userList"></ul>
+      </main>
+    </div>
+  `;
+
+  fetch("http://127.0.0.1:5000/api/users", {
+    headers: {
+      Authorization: "Bearer " + token
+    }
+  })
+    .then(res => res.json())
+    .then(users => {
+      const list = document.getElementById("userList");
+      list.innerHTML = "";
+
+      users.forEach(u => {
+        const li = document.createElement("li");
+        li.innerText = `${u.first_name} (${u.role})`;
+        list.appendChild(li);
+      });
+    });
+}

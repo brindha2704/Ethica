@@ -1,0 +1,477 @@
+.hr-dashboard {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  background:
+    radial-gradient(circle at 83% 16%, #1a2442 0%, transparent 42%),
+    radial-gradient(circle at 12% 84%, #241933 0%, transparent 38%),
+    #0a101a;
+  color: #dbe4f3;
+}
+
+.hr-sidebar {
+  background: linear-gradient(180deg, #0f1728 0%, #0b1220 100%);
+  border-right: 1px solid #1f2c42;
+  padding: 22px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.hr-brand h2 {
+  margin: 0 0 18px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hr-menu {
+  margin: 0;
+  padding: 0;
+}
+
+.hr-menu li {
+  list-style: none;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  margin-bottom: 8px;
+  color: #b6c3da;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+}
+
+.hr-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hr-menu-item svg {
+  width: 16px;
+  height: 16px;
+}
+
+.hr-menu li:hover {
+  background: #182338;
+  border-color: #293957;
+  color: #f2f7ff;
+}
+
+.hr-menu li.active {
+  background: #202d43;
+  border-color: #304564;
+  color: #f8fbff;
+}
+
+.hr-logout-btn {
+  background: #121b2d;
+  border: 1px solid #2a3b59;
+  color: #d7e1ef;
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.hr-logout-btn:hover {
+  background: #1a2640;
+}
+
+.hr-main {
+  padding: 22px 24px;
+}
+
+.hr-topbar {
+  padding-bottom: 14px;
+  border-bottom: 1px solid #203049;
+  margin-bottom: 14px;
+}
+
+.hr-topbar h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.hr-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 1.2fr;
+  gap: 14px;
+}
+
+.hr-col-left,
+.hr-col-mid,
+.hr-col-right {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.hr-panel {
+  background: linear-gradient(180deg, #121b2d 0%, #0d1626 100%);
+  border: 1px solid #26344c;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+}
+
+.hr-panel-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid #23324b;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.hr-panel-header h3 {
+  margin: 0;
+  font-size: 1.28rem;
+}
+
+.hr-panel-header-search .icon-btn {
+  background: #172238;
+  border: 1px solid #2d405f;
+  color: #c6d3e6;
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+
+.hr-form {
+  padding: 14px;
+  display: grid;
+  gap: 9px;
+}
+
+.hr-form label {
+  color: #a8b9d4;
+  font-size: 0.85rem;
+}
+
+.hr-form input,
+.hr-form select {
+  background: #172235;
+  border: 1px solid #2b3c59;
+  color: #dce5f3;
+  border-radius: 8px;
+  padding: 10px 11px;
+  outline: none;
+}
+
+.hr-form button {
+  margin-top: 6px;
+  background: linear-gradient(90deg, #4681ea, #2f63d3);
+  color: #eef4ff;
+  border: none;
+  border-radius: 8px;
+  padding: 11px 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.hr-status-list {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+}
+
+.hr-status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #273853;
+  border-radius: 8px;
+  background: #111b2d;
+}
+
+.hr-status-item svg {
+  width: 14px;
+  height: 14px;
+  color: #ff8f8f;
+}
+
+.hr-employee-list {
+  padding: 10px 12px 12px;
+}
+
+.hr-employee-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #25354f;
+  background: #111b2d;
+  margin-bottom: 9px;
+}
+
+.hr-employee-row h4 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.hr-employee-row p,
+.hr-employee-row span {
+  margin: 3px 0 0;
+  color: #98aac9;
+  font-size: 0.86rem;
+}
+
+.hr-analysis-list {
+  padding: 12px;
+}
+
+.hr-analysis-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px;
+  border-bottom: 1px solid #1f2f47;
+}
+
+.hr-analysis-row:last-child {
+  border-bottom: none;
+}
+
+.hr-task-stack {
+  padding: 10px 12px 12px;
+}
+
+.hr-task-card {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #263750;
+  background: #121d2f;
+  margin-bottom: 9px;
+}
+
+.hr-task-card.overdue {
+  background: #2a1a24;
+  border-color: #5f3648;
+}
+
+.hr-task-card h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.hr-task-card p {
+  margin: 3px 0 5px;
+  color: #95a8c7;
+  font-size: 0.84rem;
+}
+
+.hr-task-card span {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #e1e8f5;
+}
+
+.hr-task-card.overdue span {
+  color: #ff919c;
+}
+
+.hr-tabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.hr-tabs span {
+  color: #9bb0ce;
+  font-size: 0.8rem;
+}
+
+.hr-performance {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr 110px;
+  align-items: center;
+  gap: 8px;
+}
+
+.hr-performance ul {
+  margin: 0;
+  padding: 0;
+}
+
+.hr-performance li {
+  list-style: none;
+  margin-bottom: 8px;
+  color: #c1cee2;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 7px;
+}
+
+.dot-red {
+  background: #de6b78;
+}
+
+.dot-blue {
+  background: #4387ef;
+}
+
+.dot-amber {
+  background: #e6ac4a;
+}
+
+.hr-donut {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: conic-gradient(#de6b78 0 42%,
+      #4387ef 42% 76%,
+      #e6ac4a 76% 100%);
+  position: relative;
+}
+
+.hr-donut::after {
+  content: "";
+  position: absolute;
+  inset: 21px;
+  border-radius: 50%;
+  background: #111b2d;
+  border: 1px solid #2c3d58;
+}
+
+.hr-placeholder {
+  margin: 0;
+  padding: 14px;
+  color: #a8b8d2;
+}
+
+.hr-panel .table-wrap {
+  padding: 10px 12px 12px;
+  overflow-x: auto;
+}
+
+.hr-panel table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hr-panel th,
+.hr-panel td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid #1f2f47;
+}
+
+.hr-panel th {
+  color: #9db1ce;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.hr-panel .actions button {
+  background: transparent;
+  border: 1px solid #375387;
+  color: #8fb0f1;
+  border-radius: 7px;
+  padding: 4px 9px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+@media (max-width: 1200px) {
+  .hr-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .hr-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .hr-sidebar {
+    border-right: none;
+    border-bottom: 1px solid #1f2c42;
+  }
+
+  .hr-main {
+    padding: 16px;
+  }
+}
+
+/* Notification Styles */
+.notification-btn {
+  background: #172238;
+  color: #c6d3e6;
+  border: 1px solid #2d405f;
+  border-radius: 8px;
+  padding: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  margin-right: 10px;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #0a101a;
+}
+
+.notification-popup {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #1e293b;
+  color: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-left: 4px solid #ef4444;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideIn 0.5s ease-out;
+  max-width: 300px;
+}
+
+.notification-popup.hidden {
+  display: none;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

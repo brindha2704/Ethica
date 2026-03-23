@@ -1,0 +1,392 @@
+.manager-dashboard {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 250px 1fr;
+  background:
+    radial-gradient(circle at 82% 18%, #1a2442 0%, transparent 44%),
+    radial-gradient(circle at 12% 84%, #251834 0%, transparent 38%),
+    #0a101a;
+  color: #dce5f3;
+}
+
+.manager-sidebar {
+  background: linear-gradient(180deg, #10192b 0%, #0b1221 100%);
+  border-right: 1px solid #1f2d44;
+  padding: 22px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.manager-brand h2 {
+  margin: 0 0 18px;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.manager-menu {
+  margin: 0;
+  padding: 0;
+}
+
+.manager-menu li {
+  list-style: none;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  color: #b5c4dc;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.manager-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.manager-menu-item svg {
+  width: 16px;
+  height: 16px;
+}
+
+.manager-menu li:hover {
+  background: #18233a;
+  border-color: #2b3d5d;
+  color: #f2f7ff;
+}
+
+.manager-menu li.active {
+  background: #212f46;
+  border-color: #334c6c;
+  color: #f8fbff;
+}
+
+.manager-logout-btn {
+  background: #121d2f;
+  border: 1px solid #2a3c5a;
+  color: #d7e1f0;
+  border-radius: 10px;
+  padding: 11px 14px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.manager-main {
+  padding: 22px 24px;
+}
+
+.manager-topbar {
+  padding-bottom: 14px;
+  border-bottom: 1px solid #21314a;
+  margin-bottom: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.manager-topbar h1 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.manager-report-btn {
+  background: #1a263d;
+  color: #dbe7fa;
+  border: 1px solid #314765;
+  border-radius: 8px;
+  padding: 9px 11px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+}
+
+.manager-stats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.manager-stat-card {
+  border-radius: 8px;
+  padding: 14px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.manager-stat-card h3 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.manager-stat-card p {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.manager-stat-card.blue { background: linear-gradient(160deg, #2859b8, #1d3f7a); }
+.manager-stat-card.green { background: linear-gradient(160deg, #3f6b63, #2c4f48); }
+.manager-stat-card.indigo { background: linear-gradient(160deg, #2f5c87, #254466); }
+.manager-stat-card.orange { background: linear-gradient(160deg, #b06c4f, #824d39); }
+.manager-stat-card.slate { background: linear-gradient(160deg, #2f3e59, #233043); }
+
+.manager-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 14px;
+}
+
+.manager-left-col,
+.manager-right-col {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.manager-panel {
+  background: linear-gradient(180deg, #121c2f 0%, #0d1526 100%);
+  border: 1px solid #27374f;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+}
+
+.manager-panel-header {
+  padding: 12px 14px;
+  border-bottom: 1px solid #23344e;
+}
+
+.manager-panel-header h3 {
+  margin: 0;
+}
+
+.manager-table-wrap {
+  overflow-x: auto;
+  padding: 8px 10px 10px;
+}
+
+.manager-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.manager-table-wrap th,
+.manager-table-wrap td {
+  text-align: left;
+  padding: 10px 8px;
+  border-bottom: 1px solid #1f2f47;
+}
+
+.manager-table-wrap th {
+  color: #9db1ce;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.manager-table-wrap td p {
+  margin: 3px 0 0;
+  color: #8da2c2;
+  font-size: 0.82rem;
+}
+
+.manager-status.overdue {
+  color: #ff8f9e;
+  font-weight: 700;
+}
+
+.manager-rate {
+  padding: 12px;
+}
+
+.manager-rate-bar {
+  display: flex;
+  overflow: hidden;
+  border-radius: 8px;
+  border: 1px solid #2e415f;
+}
+
+.manager-rate-bar span {
+  display: block;
+  padding: 8px 10px;
+  font-weight: 700;
+  font-size: 0.88rem;
+}
+
+.manager-rate-bar .done {
+  background: linear-gradient(90deg, #2f63d3, #376dde);
+}
+
+.manager-rate-bar .progress {
+  background: linear-gradient(90deg, #c07b3f, #9f6030);
+  text-align: right;
+}
+
+.manager-rate-labels {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  color: #c0cee3;
+  font-size: 0.85rem;
+}
+
+.dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.done-dot { background: #4b82ef; }
+.progress-dot { background: #d08946; }
+
+.manager-analytics {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1fr 160px;
+  gap: 10px;
+}
+
+.manager-chart-mock {
+  background: #111d2e;
+  border: 1px solid #2b3f5c;
+  border-radius: 8px;
+  padding: 6px;
+  min-height: 140px;
+}
+
+.manager-chart-mock svg {
+  width: 100%;
+  height: 130px;
+}
+
+.line-blue {
+  fill: none;
+  stroke: #82abff;
+  stroke-width: 3;
+}
+
+.line-orange {
+  fill: none;
+  stroke: #e2a15f;
+  stroke-width: 3;
+}
+
+.manager-mini-table {
+  display: grid;
+  gap: 8px;
+}
+
+.manager-mini-table div {
+  background: #111b2d;
+  border: 1px solid #263853;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.manager-placeholder {
+  margin: 0;
+  padding: 14px;
+  color: #a7b7d1;
+}
+
+@media (max-width: 1200px) {
+  .manager-stats {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+
+  .manager-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .manager-dashboard {
+    grid-template-columns: 1fr;
+  }
+
+  .manager-sidebar {
+    border-right: none;
+    border-bottom: 1px solid #1f2d44;
+  }
+
+  .manager-main {
+    padding: 16px;
+  }
+
+  .manager-analytics {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Notification Styles */
+.notification-btn {
+  background: #1a263d;
+  color: #dbe7fa;
+  border: 1px solid #314765;
+  border-radius: 8px;
+  padding: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  position: relative;
+  margin-right: 10px;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  height: 18px;
+  width: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #0a101a;
+}
+
+.notification-popup {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #1e293b;
+  color: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  border-left: 4px solid #ef4444;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: slideIn 0.5s ease-out;
+  max-width: 300px;
+}
+
+.notification-popup.hidden {
+  display: none;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}

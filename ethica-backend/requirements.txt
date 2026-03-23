@@ -1,0 +1,6 @@
+flask
+flask-cors
+PyJWT
+Flask-APScheduler
+werkzeug
+python-dotenv
