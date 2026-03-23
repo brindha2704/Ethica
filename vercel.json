@@ -7,7 +7,8 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/public/$1"
+      "destination": "/ethica-frontend/dist/$1"
     }
-  ]
+  ],
+  "outputDirectory": "ethica-frontend/dist"
 }
