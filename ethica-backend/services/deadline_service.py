@@ -1,5 +1,6 @@
 import threading
 import time
+from datetime import datetime
 from database.db_manager import get_db, get_db_cursor, get_placeholder
 from core.config import DATABASE_URL
 
@@ -14,7 +15,9 @@ def _check_and_notify_deadlines(app_context=None):
             
             # Find tasks that are actively overdue 
             # SQLite: date('now'), Postgres: CURRENT_DATE
+            # Important: Cast TEXT to DATE in Postgres to avoid type mismatch
             now_sql = "CURRENT_DATE" if DATABASE_URL else "date('now')"
+            cast_sql = "::DATE" if DATABASE_URL else ""
             
             db.execute(f"""
                 SELECT t.id, t.title, t.due_date, u.department, u.firstName, u.lastName
@@ -22,7 +25,7 @@ def _check_and_notify_deadlines(app_context=None):
                 JOIN users u ON t.assignee_user_id = u.id
                 WHERE t.status != 'completed' 
                   AND t.status != 'overdue'
-                  AND t.due_date < {now_sql}
+                  AND t.due_date{cast_sql} < {now_sql}
             """)
             overdue_tasks = db.fetchall()
             

@@ -78,11 +78,13 @@ def get_overview_stats():
 
         # 2. Overdue Summary
         # SQLite: date('now'), Postgres: CURRENT_DATE
+        # Important: Cast TEXT to DATE in Postgres to avoid type mismatch
         now_sql = "CURRENT_DATE" if DATABASE_URL else "date('now')"
+        cast_sql = "::DATE" if DATABASE_URL else ""
         db.execute(f"""
             SELECT assignee_name as owner, title as task, due_date, status
             FROM tasks
-            WHERE status = 'overdue' OR (status != 'completed' AND due_date < {now_sql})
+            WHERE status = 'overdue' OR (status != 'completed' AND due_date{cast_sql} < {now_sql})
             ORDER BY due_date ASC LIMIT 10
         """)
         rows = db.fetchall()

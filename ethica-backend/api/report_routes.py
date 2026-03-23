@@ -16,13 +16,15 @@ def get_deadline_violations():
         user_id = g.current_user["id"]
         
         # SQLite: date('now'), Postgres: CURRENT_DATE
+        # Important: Cast TEXT to DATE in Postgres to avoid type mismatch
         now_sql = "CURRENT_DATE" if DATABASE_URL else "date('now')"
+        cast_sql = "::DATE" if DATABASE_URL else ""
         
         # Fetch overdue tasks for this employee
         db.execute(f"""
             SELECT id, title, due_date, status, escalation_level, employee_report 
             FROM tasks 
-            WHERE assignee_user_id = {p} AND (status = 'overdue' OR (status != 'completed' AND due_date <= {now_sql}))
+            WHERE assignee_user_id = {p} AND (status = 'overdue' OR (status != 'completed' AND due_date{cast_sql} <= {now_sql}))
             ORDER BY due_date ASC
         """, (user_id,))
         rows = db.fetchall()
