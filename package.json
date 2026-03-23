@@ -2,6 +2,7 @@
   "name": "ethica-root",
   "version": "1.0.0",
   "scripts": {
-    "build": "cd ethica-frontend && npm install && npm run build && cd .. && mkdir -p public && cp -r ethica-frontend/dist/. public/"
+    "postinstall": "cd ethica-frontend && npm install",
+    "build": "cd ethica-frontend && npm run build && cd .. && mkdir -p public && cp -rp ethica-frontend/dist/* public/"
   }
 }
