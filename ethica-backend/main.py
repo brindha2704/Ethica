@@ -34,5 +34,7 @@ def home():
 
 if __name__ == "__main__":
     init_db()
-    start_deadline_checker()
+    # Don't start separate thread if on Vercel (handled by cron or manual triggers later)
+    if not os.getenv("VERCEL"):
+        start_deadline_checker()
     app.run(debug=True, port=5000)
