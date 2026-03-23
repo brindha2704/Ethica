@@ -1,16 +1,17 @@
 import sys
 import os
 
-# Add ethica-backend to path
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", "ethica-backend"))
+# Define the backend directory
+backend_dir = os.path.join(os.path.dirname(__file__), "..", "ethica-backend")
+sys.path.append(backend_dir)
 
+# Import the app from main.py in ethica-backend
 from main import app
 
-# Vercel needs 'app' to be exposed
-# We also need to ensure the DB is initialized if it's the first run
+# Initialize the database within the application context
 from database.schema import init_db
 with app.app_context():
     init_db()
 
-# Export for Vercel
+# Vercel looks for 'app' in api/index.py
 app = app
