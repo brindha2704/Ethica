@@ -1,8 +1,6 @@
-// import { createIcons, icons } from 'lucide/dist/esm/lucide.js';
-
-// Since we are reverting to CDN due to build issues:
-// window.lucide is already populated by the script tag in index.html.
-// We just need to ensure our code uses it.
+import { createIcons, 
+  Menu, X, LogOut, LayoutDashboard, Users, FileText, CheckSquare, Settings 
+} from 'lucide/dist/esm/lucide.js';
 import { renderLogin } from "./pages/Auth/login.js";
 import { renderRegister } from "./pages/Auth/register.js";
 import { renderAdminDashboard } from "./pages/Dashboard/admin.js";
@@ -12,29 +10,12 @@ import { renderManagerDashboard } from "./pages/Dashboard/manager.js";
 import "./styles/global.css";
 import "./styles/dashboard.css";
 import "./styles/admin.css";
-// import "./styles/employee.css"; // Deprecated
-// import "./styles/hr.css"; // Deprecated
-// import "./styles/manager.css"; // Deprecated
 
-// Globally expose createIcons for dashboards to use if needed, 
-// OR better yet, pass it down or import it in those files too. 
-// For now, attaching to window to minimize breakage in legacy code that assumes `lucide.createIcons` exists.
-// The CDN script exposes the 'lucide' global variable.
-const { createIcons, icons } = window.lucide || {};
-
+// Expose to window for any other components that might still use the global
 window.lucide = {
-  createIcons: createIcons,
-  // We expose specific icons or all icons depending on usage.
-  // The previous code expected specific icons, so we map them from 'icons' object.
+  createIcons,
   icons: {
-    Menu: icons?.Menu,
-    X: icons?.X,
-    LogOut: icons?.LogOut,
-    LayoutDashboard: icons?.LayoutDashboard,
-    Users: icons?.Users,
-    FileText: icons?.FileText,
-    CheckSquare: icons?.CheckSquare,
-    Settings: icons?.Settings
+    Menu, X, LogOut, LayoutDashboard, Users, FileText, CheckSquare, Settings
   }
 };
 
