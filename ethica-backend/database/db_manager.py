@@ -1,3 +1,4 @@
+import os
 import sqlite3
 import psycopg2
 import psycopg2.extras
@@ -8,6 +9,9 @@ def get_db():
         # Connect to Postgres (Supabase)
         conn = psycopg2.connect(DATABASE_URL)
         return conn
+    elif os.getenv("VERCEL"):
+        # Explicit error for Vercel if DATABASE_URL is missing
+        raise ValueError("DATABASE_URL environment variable is MISSING on Vercel. Please add it to your Project Settings.")
     else:
         # Fallback to SQLite (local)
         conn = sqlite3.connect(DB_NAME)
