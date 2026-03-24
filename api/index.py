@@ -7,15 +7,21 @@ sys.path.append(backend_dir)
 
 # Import the app from main.py in ethica-backend
 from main import app
-from database.schema import init_db
+import subprocess
 
-# Initialize database only if DATABASE_URL is present, and skip if it already exists or if on Vercel
-# (init_db is idempotent but let's be careful in serverless env)
-with app.app_context():
-    try:
-        init_db()
-    except Exception as e:
-        print(f"Database initialization skip/fail: {e}")
+# Log installed packages for debugging
+try:
+    pkgs = subprocess.check_output([sys.executable, "-m", "pip", "freeze"]).decode()
+    print("INSTALLED PACKAGES:\n", pkgs)
+except:
+    print("Could not list packages")
 
 # Vercel looks for 'app' in api/index.py
+with app.app_context():
+    try:
+        from database.schema import init_db
+        init_db()
+    except Exception as e:
+        print(f"Startup DB Error: {e}")
+
 app = app
