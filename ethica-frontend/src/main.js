@@ -1,6 +1,4 @@
-import { createIcons, 
-  Menu, X, LogOut, LayoutDashboard, Users, FileText, CheckSquare, Settings 
-} from 'https://esm.sh/lucide';
+import { createIcons, icons } from "./utils/icons.js";
 import { renderLogin } from "./pages/Auth/login.js";
 import { renderRegister } from "./pages/Auth/register.js";
 import { renderAdminDashboard } from "./pages/Dashboard/admin.js";
@@ -11,12 +9,10 @@ import "./styles/global.css";
 import "./styles/dashboard.css";
 import "./styles/admin.css";
 
-// Expose to window for any other components that might still use the global
+// Expose to window for backward compatibility with components
 window.lucide = {
   createIcons,
-  icons: {
-    Menu, X, LogOut, LayoutDashboard, Users, FileText, CheckSquare, Settings
-  }
+  icons
 };
 
 
