@@ -3,15 +3,15 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from core.config import ALLOWED_ORIGINS
 from database.schema import init_db
-from api.auth_routes import auth_bp
-from api.user_routes import user_bp
-from api.task_routes import task_bp
-from api.notification_routes import notification_bp
-from api.admin_routes import admin_bp
-from api.hr_routes import hr_bp
-from api.manager_routes import manager_bp
-from api.employee_routes import employee_bp
-from api.report_routes import report_bp
+from routes.auth_routes import auth_bp
+from routes.user_routes import user_bp
+from routes.task_routes import task_bp
+from routes.notification_routes import notification_bp
+from routes.admin_routes import admin_bp
+from routes.hr_routes import hr_bp
+from routes.manager_routes import manager_bp
+from routes.employee_routes import employee_bp
+from routes.report_routes import report_bp
 from services.deadline_service import start_deadline_checker
 
 app = Flask(__name__)

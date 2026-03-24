@@ -17,7 +17,7 @@ export function renderUsers() {
     </div>
   `;
 
-  fetch("http://127.0.0.1:5000/api/users", {
+  fetch("/api/users", {
     headers: {
       Authorization: "Bearer " + token
     }
