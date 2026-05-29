@@ -1,0 +1,156 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+/* Page background */
+.auth-bg {
+  background: radial-gradient(circle at top, #0b1220, #000000);
+  min-height: 100vh;
+}
+
+/* Layout */
+.auth-page {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* Left image panel */
+.auth-left {
+  flex: 1.2;                         /* slightly larger left side */
+  background: url("/images/auth.png") no-repeat center center;
+  background-size: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;           /* center logo horizontally */
+  padding-left: 60px;                /* push content inside */
+}
+
+/* Logo */
+.auth-logo {
+  max-width: 260px;
+  width: 60%;
+  opacity: 0.95;
+}
+
+/* Right side */
+.auth-right {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-right: 60px;               /* balance spacing */
+}
+
+/* Card */
+.auth-card {
+  width: 100%;
+  max-width: 440px;                  /* slightly wider card */
+  background: rgba(20, 20, 20, 0.88);
+  border-radius: 16px;
+  padding: 32px 36px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  backdrop-filter: blur(10px);
+  color: #ffffff;
+}
+
+/* Headings & text */
+.auth-card h3 {
+  margin-top: 0;
+  margin-bottom: 6px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.auth-card p {
+  text-align: center;
+  color: #9ca3af;
+  margin-bottom: 22px;
+  font-size: 14px;
+}
+
+/* Inputs */
+.auth-input {
+  width: 100%;
+  background: #0f0f0f;
+  border: 1px solid #2a2a2a;
+  color: #ffffff;
+  padding: 12px 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.auth-input::placeholder {
+  color: #888;
+}
+
+.auth-input:focus {
+  outline: none;
+  background: #0f0f0f;
+  color: #ffffff;
+  border-color: #2563eb;
+  box-shadow: none;
+}
+
+/* Two inputs in a row */
+.auth-row {
+  display: flex;
+  gap: 10px;
+}
+
+/* Button */
+.btn-primary {
+  width: 100%;
+  padding: 11px;
+  background-color: #1e3a8a;
+  border: none;
+  border-radius: 10px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 6px;
+}
+
+.btn-primary:hover {
+  background-color: #1e40af;
+}
+
+/* Links */
+.auth-link {
+  color: #3b82f6;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+/* Messages */
+.text-success {
+  color: #22c55e;
+  text-align: center;
+  margin-top: 10px;
+}
+
+.text-danger {
+  color: #ef4444;
+  text-align: center;
+  margin-top: 10px;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .auth-left {
+    display: none;                  /* hide image on mobile */
+  }
+  .auth-right {
+    padding-right: 0;
+  }
+  .auth-page {
+    flex-direction: column;
+  }
+}
